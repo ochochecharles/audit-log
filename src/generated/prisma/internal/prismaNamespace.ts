@@ -527,7 +527,6 @@ export const AuditLogScalarFieldEnum = {
   ipAddress: 'ipAddress',
   deviceInfo: 'deviceInfo',
   location: 'location',
-  reason: 'reason',
   timestamp: 'timestamp'
 } as const
 
