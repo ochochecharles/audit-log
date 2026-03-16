@@ -14,7 +14,6 @@ export class AuditlogService {
     ipAddress?: string;
     deviceInfo?: string;
     location?: string;
-    reason?: string;
   }) {
     return this.prisma.auditLog.create({
       data: {
@@ -26,7 +25,6 @@ export class AuditlogService {
         ipAddress: params.ipAddress,
         deviceInfo: params.deviceInfo,
         location: params.location,
-        reason: params.reason,
       },
     });
   }

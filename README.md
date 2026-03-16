@@ -17,39 +17,95 @@ The goal is to provide accountability and traceability for application events.
   - Location (via GeoIP lookup)
   - Timestamp
 
-## Tech Stack
-- NestJS (framework)
-- Prisma (ORM)
-- PostgreSQL (database)
-- GeoIP-lite (location lookup)
+## Installation
+```bash
+npm i @ochoche/audit-log
+```
 
 ## Setup Instructions
 
-### 1. Clone the repository
+### 1. Add the AuditLog model to your Prisma schema
+```Prisma
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  entity      String
+  entityId    String?
+  beforeState Json?
+  afterState  Json?
+  ipAddress   String?
+  deviceInfo  String?
+  location    String?
+  timestamp   DateTime @default(now())
+}
+```
+#### Run migrations:
 ```bash
-git clone https://github.com/<your-username>/audit-log-system.git
-cd audit-log-system
-
-### 2. Install dependencies
-npm install
-
-
-### 3. Configure environment variables
-Create a .env file:
-DATABASE_URL="postgresql://user:password@localhost:5432/auditlogdb"
-
-### 4. Run migrations
-npx prisma migrate dev --name init
-
-
-###5. Generate Prisma client
+npx prisma migrate dev --name add_audit_log
 npx prisma generate
+```
 
+### 2. Configure environment variables
+Create a .env file with your database connection:
+```Env
+DATABASE_URL="postgresql://user:password@localhost:5432/auditlogdb"
+npm install
+```
 
-### 6. Start the server
-npm run start:dev
+### 3. Import the module 
+In your app.module.ts:
+```ts
+import { Module } from '@nestjs/common';
+import { AuditLogModule } from '@ochoche/audit-log';
 
-Author
+@Module({
+  imports: [AuditLogModule],
+})
+export class AppModule {}
+```
+
+### 4. Apply the interceptor globally
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { AuditLogInterceptor } from '@ochoche/audit-log';
+import { AuditlogService } from '@ochoche/audit-log';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  const auditLogService = app.get(AuditlogService);
+  app.useGlobalInterceptors(new AuditLogInterceptor(auditLogService));
+  await app.listen(process.env.PORT ?? 3000);
+}
+bootstrap();
+```
+
+## Usage
+You can also inject the service directly for manual logging:
+```ts
+import { AuditLogService } from '@ochoche/audit-log';
+
+@Injectable()
+export class OrdersService {
+  constructor(private readonly auditLogService: AuditLogService) {}
+
+  async updateOrder(orderId: string, data: any) {
+    // ... update logic
+    await this.auditLogService.createLog({
+      action: 'UPDATE',
+      entity: 'Order',
+      entityId: orderId,
+      beforeState: { /* old data */ },
+      afterState: { /* new data */ },
+      ipAddress: '127.0.0.1',
+      deviceInfo: 'Mozilla/5.0',
+      location: 'Nigeria',
+    });
+  }
+}
+```
+
+### Author
 Ochoche
 
 
