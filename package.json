@@ -1,6 +1,6 @@
 {
   "name": "@ochoche/audit-log",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "NestJS Audit Log Module with Prisma",
   "author": "ochoche",
   "license": "MIT",
