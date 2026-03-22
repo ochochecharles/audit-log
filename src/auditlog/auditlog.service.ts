@@ -1,31 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { Injectable, Inject } from '@nestjs/common';
+import type { AuditLogEntry, AuditLogRepository } from './ORM-core/auditlog.repository.js';
+import { AUDIT_LOG_REPOSITORY } from './ORM-core/auditlog.constants.js';
 
 @Injectable()
 export class AuditlogService {
-    constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(AUDIT_LOG_REPOSITORY)private readonly repo: AuditLogRepository) {}
 
-     async logAction(params: {
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'GET' | 'UNKNOWN';
-    entity: string;
-    entityId: string;
-    beforeState?: any;
-    afterState?: any;
-    ipAddress?: string;
-    deviceInfo?: string;
-    location?: string;
-  }) {
-    return this.prisma.auditLog.create({
-      data: {
-        action: params.action,
-        entity: params.entity,
-        entityId: params.entityId,
-        beforeState: params.beforeState,
-        afterState: params.afterState,
-        ipAddress: params.ipAddress,
-        deviceInfo: params.deviceInfo,
-        location: params.location,
-      },
-    });
+  async logAction(params: AuditLogEntry): Promise<void> {
+    await this.repo.saveLog(params);
   }
 }
+
+

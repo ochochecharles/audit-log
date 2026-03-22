@@ -1,4 +1,4 @@
-# Audit Log System (NestJS + Prisma + PostgreSQL)
+# Audit Log System (NestJS + ORM‑Agnostic)
 
 ## Overview
 This project implements an audit logging system using NestJS, Prisma, and PostgreSQL.  
@@ -105,6 +105,46 @@ export class OrdersService {
 }
 ```
 
+## Using Other ORMs
+This package is ORM‑agnostic. Prisma is provided as the default adapter, but you can implement your own adapter for TypeORM, Sequelize, MikroORM, or raw SQL.
+
+### Example: TypeORM Adapter
+```ts
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AuditLogRepository, AuditLogEntry, AUDIT_LOG_REPOSITORY } from '@ochoche/audit-log';
+import { AuditLog } from './auditlog.entity';
+
+@Injectable()
+export class TypeORMAuditLogRepository implements AuditLogRepository {
+  constructor(@InjectRepository(AuditLog) private repo: Repository<AuditLog>) {}
+
+  async saveLog(log: AuditLogEntry): Promise<void> {
+    await this.repo.save(log);
+  }
+}
+```
+
+### Bind Your Adapter
+```ts
+@Module({
+  providers: [
+    AuditlogService,
+    {
+      provide: AUDIT_LOG_REPOSITORY,
+      useClass: TypeORMAuditLogRepository,
+    },
+  ],
+  exports: [AuditlogService],
+})
+export class AuditlogModule {}
+```
+
+## Summary
+	Works out of the box with Prisma.
+• 	Fully ORM‑agnostic: you can plug in TypeORM, Sequelize, or any other ORM by implementing the    AuditLogRepository interface.
+• 	Provides a NestJS interceptor for automatic logging and a service for manual logging.
 ### Author
 Ochoche
 

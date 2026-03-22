@@ -32,6 +32,7 @@ export class AuditLogInterceptor implements NestInterceptor {
           ipAddress,
           deviceInfo,
           location,
+          timestamp: new Date(),
         });
       }),
     );
